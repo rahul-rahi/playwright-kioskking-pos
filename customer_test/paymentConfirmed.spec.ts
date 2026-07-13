@@ -4,7 +4,7 @@ test('CT009 - Verify Payment Confirmed Popup', async ({ page }) => {
 
   await page.goto('http://localhost:5173/customer');
 
-  // Wait for page
+  // Product loaded
   await expect(
     page.getByText('Caramel Cold Coffee Large')
   ).toBeVisible();
@@ -15,12 +15,32 @@ test('CT009 - Verify Payment Confirmed Popup', async ({ page }) => {
   // Open cart
   await page.getByRole('button', { name: /Items/ }).click();
 
+  // Cart page
+  await expect(
+    page.getByText('Your Cart')
+  ).toBeVisible();
+
   // Pay at counter
   await page.getByRole('button', { name: 'Pay At Counter' }).click();
 
-  // Wait for staff to confirm payment
+  console.log('Waiting for staff confirmation...');
+  await page.pause();
+
+  // Bill receipt
+  await expect(
+    page.getByText('Bill Receipt')
+  ).toBeVisible();
+
+  console.log('Bill Receipt Found');
+
+  // Continue
+  await page.getByRole('button', { name: 'Continue' }).click();
+
+  // Payment confirmed popup
   await expect(
     page.getByText('Payment Confirmed')
-  ).toBeVisible({ timeout: 60000 });
+  ).toBeVisible();
+
+  console.log('Payment Confirmed Popup Found');
 
 });
