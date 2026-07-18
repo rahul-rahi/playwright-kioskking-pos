@@ -8,28 +8,31 @@ test('Two Browser Test', async ({ browser }) => {
   // Customer page
   await customerPage.goto('http://localhost:5173/customer');
 
-  // Staff login page
+  await expect(
+    customerPage.getByText('Caramel Cold Coffee Large')
+  ).toBeVisible();
+
+  console.log('Customer page opened');
+
+  // Staff login
   await staffPage.goto('http://localhost:5173/login');
 
-  // Login
   await staffPage.getByPlaceholder('Username').fill('staff1');
   await staffPage.getByPlaceholder('Password').fill('staff123');
 
   await staffPage.getByRole('button', { name: /login/i }).click();
 
-  // Wait for dashboard
-  // await expect(
-    // staffPage.getByText('Pending Payments')
-  // ).toBeVisible();
-  console.log("Current URL:", staffPage.url());
+  // Give React time to finish navigation
+  await staffPage.waitForTimeout(3000);
 
-await staffPage.screenshot({ path: "staff-page.png", fullPage: true });
+  console.log('Current URL:', staffPage.url());
 
-await staffPage.pause();
+  await staffPage.screenshot({
+    path: 'staff-page.png',
+    fullPage: true
+  });
 
-  console.log('Staff login successful');
-
-  // Pause
+  // Pause here so we can inspect the page
   await staffPage.pause();
 
 });

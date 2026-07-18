@@ -143,8 +143,39 @@ test('Complete Order Flow', async ({ browser }) => {
   console.log('Payment Confirmed Popup Found');
 
 
+// Click Continue
+await customer.getByRole('button', {
+  name: 'Continue'
+}).click();
 
-  // Pause for inspection
+console.log('Continue button clicked');
+
+// Wait for Payment Confirmed popup
+await expect(
+  customer.getByText('Payment Confirmed')
+).toBeVisible({
+  timeout: 15000
+});
+
+console.log('Payment Confirmed popup found');
+
+// Click Play Game
+await customer.getByRole('button', {
+  name: 'Play Game'
+}).click();
+
+console.log('Play Game clicked');
+
+// Verify Game page
+await expect(
+  customer.getByText('Catch The Momos')
+).toBeVisible({
+  timeout: 15000
+});
+
+console.log('Game page opened');
+
+// Pause for inspection
 
    await customer.pause();
 

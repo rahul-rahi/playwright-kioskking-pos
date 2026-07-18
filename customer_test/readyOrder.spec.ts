@@ -1,18 +1,16 @@
 import { test, expect } from '@playwright/test';
 
-test('Complete Order Flow', async ({ browser }) => {
+test('Ready Order Flow', async ({ browser }) => {
 
-  // ============================
-  // Open two browser pages
-  // ============================
-
+  // ==========================
+  // Open Browsers
+  // ==========================
   const customer = await browser.newPage();
   const staff = await browser.newPage();
 
-  // ============================
-  // CUSTOMER
-  // ============================
-
+  // ==========================
+  // CUSTOMER PAGE
+  // ==========================
   await customer.goto('http://localhost:5173/customer');
 
   await expect(
@@ -21,8 +19,11 @@ test('Complete Order Flow', async ({ browser }) => {
 
   console.log('Customer page opened');
 
-  // Add product
-  await customer.getByRole('button', { name: 'Add' }).nth(5).click();
+  // Add Product
+  await customer
+    .getByRole('button', { name: 'Add' })
+    .nth(5)
+    .click();
 
   console.log('Product added');
 
@@ -42,19 +43,16 @@ test('Complete Order Flow', async ({ browser }) => {
 
   console.log('Customer placed order');
 
-  // Waiting screen
+  // Waiting Screen
   await expect(
     customer.getByText('Waiting For Payment')
   ).toBeVisible();
 
   console.log('Customer waiting for payment');
 
-
-
-  // ============================
-  // STAFF
-  // ============================
-
+  // ==========================
+  // STAFF LOGIN
+  // ==========================
   await staff.goto('http://localhost:5173/login');
 
   await staff.getByPlaceholder('Username').fill('staff1');
@@ -67,27 +65,25 @@ test('Complete Order Flow', async ({ browser }) => {
 
   console.log('Staff login completed');
 
-  // Wait for dashboard
-  await staff.waitForLoadState('networkidle');
+  // Wait until dashboard opens
+  await expect(
+    staff.getByRole('button', { name: 'POS' })
+  ).toBeVisible({
+    timeout: 15000
+  });
 
   console.log('Staff dashboard opened');
 
-
-
-  // ============================
+  // ==========================
   // CLICK BELL
-  // ============================
-
-  await staff.locator('button').nth(0).click();
+  // ==========================
+  await staff.getByRole('button', {
+    name: '🔔'
+  }).click();
 
   console.log('Notification bell clicked');
 
-
-
-  // ============================
-  // WAIT FOR ORDER
-  // ============================
-
+  // Wait for Pending Payments
   await expect(
     staff.getByText('Pending Payments')
   ).toBeVisible({
@@ -96,10 +92,9 @@ test('Complete Order Flow', async ({ browser }) => {
 
   console.log('Pending Payments opened');
 
-
-
-  // Wait until Confirm button appears
-
+  // ==========================
+  // CONFIRM ORDER
+  // ==========================
   await expect(
     staff.getByRole('button', {
       name: 'Confirm'
@@ -110,42 +105,52 @@ test('Complete Order Flow', async ({ browser }) => {
 
   console.log('Order received');
 
-
-
-  // Confirm Order
-
-  await staff.getByRole('button', {
-    name: 'Confirm'
-  }).first().click();
+  await staff
+    .getByRole('button', {
+      name: 'Confirm'
+    })
+    .first()
+    .click();
 
   console.log('Order confirmed');
+  // Wait a little for the backend to update
+await staff.waitForTimeout(2000);
 
+// Pause here so we can inspect the page
+await staff.pause();
 
-
-  // ============================
-  // CUSTOMER RECEIVES BILL
-  // ============================
-
+  // ==========================
+  // READY ORDER
+  // ==========================
   await expect(
-    customer.getByText('Bill Receipt')
+    staff.getByRole('button', {
+      name: 'Ready'
+    }).first()
   ).toBeVisible({
     timeout: 15000
   });
 
-  console.log('Bill Receipt Found');
+  console.log('Ready button found');
 
+  await staff
+    .getByRole('button', {
+      name: 'Ready'
+    })
+    .first()
+    .click();
 
+  console.log('Order marked Ready');
 
+  // ==========================
+  // CUSTOMER RECEIVES READY STATUS
+  // ==========================
   await expect(
-    customer.getByText('TOKEN NUMBER')
-  ).toBeVisible();
+    customer.getByText(/Ready/i)
+  ).toBeVisible({
+    timeout: 20000
+  });
 
-  console.log('Payment Confirmed Popup Found');
+  console.log('Customer received Ready notification');
 
-
-
-  // Pause for inspection
-
-   await customer.pause();
-
+  await customer.pause();
 });
